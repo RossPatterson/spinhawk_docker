@@ -7,7 +7,7 @@ FROM ubuntu:noble
 RUN apt-get update && \
 	apt-get install --no-install-recommends -y \
 		autoconf automake bash build-essential ca-certificates dos2unix \
-		gawk git libbz2-dev m4 unzip wget zip zlib1g-dev
+		gawk git libbz2-dev m4 unzip wget zip zlib1g-dev gettext
 
 # Build Hercules
 RUN <<EOF
@@ -32,6 +32,32 @@ RUN <<EOF
     rm -rf ~/build_herc
     echo "export PATH=\"\$PATH:/usr/local/hercules/bin\"" > /usr/local/hercules/setup.sh
     echo "export LD_LIBRARY_PATH=\"\${LD_LIBRARY_PATH:+LD_LIBRARY_PATH:}/usr/local/hercules/lib\"" >> /usr/local/hercules/setup.sh
+EOF
+
+# Build Hercules380
+RUN <<EOF
+	set -x
+	set -e
+
+    mkdir -p ~/build_herc
+    cd ~/build_herc
+    git clone https://github.com/RossPatterson/spinhawk.git
+    cd spinhawk
+	# This branch is Release 3.07 + fix for Hyperion Issue 782 + Hercules380
+	# git switch vm380-307
+	# This branch is Release 3.07 + Hercules380
+	git switch vm380-pe
+	git log HEAD...release-3.07
+	chmod a+x autogen.sh
+    ./autogen.sh
+    ./configure --prefix=/usr/local/hercules380
+    make
+    make check
+    make install
+    cd
+    rm -rf ~/build_herc
+    echo "export PATH=\"\$PATH:/usr/local/hercules380/bin\"" > /usr/local/hercules380/setup.sh
+    echo "export LD_LIBRARY_PATH=\"\${LD_LIBRARY_PATH:+LD_LIBRARY_PATH:}/usr/local/hercules380/lib\"" >> /usr/local/hercules380/setup.sh
 EOF
 
 WORKDIR     /usr/local/hercules/
