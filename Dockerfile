@@ -34,6 +34,31 @@ RUN <<EOF
     echo "export LD_LIBRARY_PATH=\"\${LD_LIBRARY_PATH:+LD_LIBRARY_PATH:}/usr/local/hercules/lib\"" >> /usr/local/hercules/setup.sh
 EOF
 
+# Build Hercules380
+RUN <<EOF
+	set -x
+	set -e
+
+    mkdir -p ~/build_herc
+    cd ~/build_herc
+    git clone https://github.com/RossPatterson/spinhawk.git
+    cd spinhawk
+	# This branch is Release 3.07 + fix for Hyperion Issue 782 + Hercules380
+	git switch vm380-307
+	git log HEAD...release-3.07
+    # ./util/cvslvlck
+	chmod a+x autogen.sh
+    ./autogen.sh
+    ./configure --prefix=/usr/local/hercules380
+    make
+    make check
+    make install
+    cd
+    rm -rf ~/build_herc
+    echo "export PATH=\"\$PATH:/usr/local/hercules380/bin\"" > /usr/local/hercules380/setup.sh
+    echo "export LD_LIBRARY_PATH=\"\${LD_LIBRARY_PATH:+LD_LIBRARY_PATH:}/usr/local/hercules380/lib\"" >> /usr/local/hercules380/setup.sh
+EOF
+
 WORKDIR     /usr/local/hercules/
 EXPOSE      3270 8038 3505
 ENTRYPOINT  ["bash"]
